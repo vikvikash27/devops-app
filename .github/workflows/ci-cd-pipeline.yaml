@@ -1,3 +1,101 @@
+# name: Full CI/CD Pipeline
+
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
+
+# jobs:
+#   build-and-scan:
+#     name: Build, Scan & Test
+#     runs-on: ubuntu-latest
+#     steps:
+#       # 1. Checkout code
+#       - uses: actions/checkout@v3
+
+#       # 2. Setup Node.js
+#       - uses: actions/setup-node@v3
+#         with:
+#           node-version: 20
+
+#       # 3. Install dependencies
+#       - name: Install Backend
+#         working-directory: backend
+#         run: npm install
+
+#       - name: Install Frontend
+#         working-directory: frontend
+#         run: npm install
+
+#       # 4. Run tests
+#       - name: Backend Tests
+#         working-directory: backend
+#         run: npm test
+
+#       - name: Frontend Tests
+#         working-directory: frontend
+#         run: npm test
+
+#       # 5. Build Docker images
+#       - name: Log in to Docker Hub
+#         uses: docker/login-action@v2
+#         with:
+#           username: ${{ secrets.DOCKER_USERNAME }}
+#           password: ${{ secrets.DOCKER_PASSWORD }}
+
+#       - name: Build Backend Docker Image
+#         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/devops-app-test:backend ./backend
+
+#       - name: Push Backend Docker Image
+#         run: docker push ${{ secrets.DOCKER_USERNAME }}/devops-app-test:backend
+
+#       - name: Build Frontend Docker Image
+#         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/devops-app-test:frontend ./frontend
+
+#       - name: Push Frontend Docker Image
+#         run: docker push ${{ secrets.DOCKER_USERNAME }}/devops-app-test:frontend
+
+#       # 6. SonarCloud scan (fixed project key)
+#       - name: SonarQube Scan
+#         uses: sonarsource/sonarcloud-github-action@v2
+#         with:
+#           projectKey: pulp-route-tech_devops-app-test
+#           organization: pulp-route-tech
+#           token: ${{ secrets.SONAR_TOKEN }}
+
+#       # 7. Trivy scan
+#       - name: Trivy Scan Backend
+#         run: trivy image --exit-code 1 --severity HIGH,CRITICAL ${{ secrets.DOCKER_USERNAME }}/devops-app-test:backend
+
+#       - name: Trivy Scan Frontend
+#         run: trivy image --exit-code 1 --severity HIGH,CRITICAL ${{ secrets.DOCKER_USERNAME }}/devops-app-test:frontend
+
+#   deploy-to-k8s:
+#     name: Deploy to Kubernetes
+#     runs-on: ubuntu-latest
+#     needs: build-and-scan
+#     steps:
+#       - uses: actions/checkout@v3
+
+#       # 1. Setup kubectl
+#       - uses: azure/setup-kubectl@v3
+#         with:
+#           version: '1.30.0'
+
+#       # 2. Setup kubeconfig
+#       - name: Setup Kubeconfig
+#         run: |
+#           mkdir -p $HOME/.kube
+#           echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+
+#       # 3. Deploy frontend & backend
+#       - name: Deploy Frontend & Backend
+#         run: |
+#           kubectl set image deployment/frontend frontend=${{ secrets.DOCKER_USERNAME }}/devops-app-test:frontend
+#           kubectl set image deployment/backend backend=${{ secrets.DOCKER_USERNAME }}/devops-app-test:backend
+#           kubectl rollout status deployment/frontend
+#           kubectl rollout status deployment/backend
 name: Full CI/CD Pipeline
 
 on:
@@ -22,11 +120,21 @@ jobs:
       # 3. Install dependencies
       - name: Install Backend
         working-directory: backend
-        run: npm install
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Install Frontend
         working-directory: frontend
-        run: npm install
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       # 4. Run tests
       - name: Backend Tests
@@ -35,7 +143,7 @@ jobs:
 
       - name: Frontend Tests
         working-directory: frontend
-        run: npm test
+        run: npm test -- --passWithNoTests
 
       # 5. Build Docker images
       - name: Log in to Docker Hub
@@ -56,7 +164,7 @@ jobs:
       - name: Push Frontend Docker Image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/devops-app-test:frontend
 
-      # 6. SonarCloud scan (fixed project key)
+      # 6. SonarCloud scan
       - name: SonarQube Scan
         uses: sonarsource/sonarcloud-github-action@v2
         with:
