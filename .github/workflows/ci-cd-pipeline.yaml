@@ -199,7 +199,7 @@ jobs:
       # 1. Setup kubectl
       - uses: azure/setup-kubectl@v3
         with:
-          version: '1.30.0'
+          version: 'latest'
 
       # 2. Setup kubeconfig
       - name: Setup Kubeconfig
