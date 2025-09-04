@@ -173,11 +173,13 @@ jobs:
       # 7. Trivy scan
       - name: Install Trivy
         run: |
-          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
-          sudo apt-get install trivy
+          sudo apt-get install -y tar
+          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.44.0_Linux-64bit.tar.gz
+          tar zxvf trivy_0.44.0_Linux-64bit.tar.gz
+          sudo mv trivy /usr/local/bin/
+
+
       - name: Trivy Scan Backend
         run: trivy image --exit-code 1 --severity HIGH,CRITICAL ${{ secrets.DOCKER_USERNAME }}/devops-app-test:backend
 
