@@ -1,9 +1,41 @@
-apiVersion: 1
-providers:
-  - name: 'default'
-    orgId: 1
-    folder: ''
-    type: file
-    disableDeletion: false
-    options:
-      path: /var/lib/grafana/dashboards
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  kubernetes-overview.json: |
+    {
+      "id": null,
+      "title": "Kubernetes Cluster Overview",
+      "tags": [ "kubernetes", "cluster", "monitoring" ],
+      "timezone": "browser",
+      "schemaVersion": 36,
+      "version": 1,
+      "panels": [
+        {
+          "type": "graph",
+          "title": "CPU Usage",
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total[5m]))",
+              "legendFormat": "CPU Usage",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "graph",
+          "title": "Memory Usage",
+          "targets": [
+            {
+              "expr": "sum(container_memory_usage_bytes)",
+              "legendFormat": "Memory Usage",
+              "refId": "B"
+            }
+          ]
+        }
+      ]
+    }

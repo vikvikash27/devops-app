@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
+  namespace: devops-app
   labels:
     app: backend
 spec:
@@ -19,26 +20,32 @@ spec:
     spec:
       containers:
         - name: backend
-          image: my-backend:latest
+          image: your-dockerhub-user/devops-app-test:backend
           ports:
             - containerPort: 3000
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: mongo-uri
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              cpu: "100m"
+              memory: "128Mi"
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              cpu: "250m"
+              memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
+  namespace: devops-app
 spec:
   selector:
     app: backend
   ports:
-    - protocol: TCP
-      port: 3000
+    - port: 3000
       targetPort: 3000
   type: ClusterIP

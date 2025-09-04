@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
+  namespace: devops-app
   labels:
     app: frontend
 spec:
@@ -19,26 +20,26 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: my-frontend:latest
+          image: your-dockerhub-user/devops-app-test:frontend
           ports:
             - containerPort: 80
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              cpu: "100m"
+              memory: "128Mi"
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              cpu: "250m"
+              memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend-service
+  namespace: devops-app
 spec:
   selector:
     app: frontend
   ports:
-    - protocol: TCP
-      port: 80
+    - port: 80
       targetPort: 80
   type: LoadBalancer
