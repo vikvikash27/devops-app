@@ -160,10 +160,15 @@ jobs:
       # 6. SonarCloud scan
       - name: SonarQube Scan
         uses: sonarsource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          projectKey: pulp-route-tech_devops-app-test
-          organization: pulp-route-tech
-          token: ${{ secrets.SONAR_TOKEN }}
+          args: >
+            -Dsonar.projectKey=pulp-route-tech_devops-app-test
+            -Dsonar.organization=pulp-route-tech
+            -Dsonar.sources=.
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       # 7. Trivy scan
       - name: Trivy Scan Backend
